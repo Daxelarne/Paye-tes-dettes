@@ -1,0 +1,37 @@
+stages:
+  - build
+  - deploy
+  
+test-all:
+  stage: build
+  tags: [maven]
+  except:
+    - main
+  image: maven:latest
+  script:
+    - mvn clean install
+  
+test-unit:
+  stage: build
+  tags: [maven]
+  only:
+    - main
+  script:
+    - mvn clean package
+    - cp target/payetesdettes*.jar payetesdettes-${CI_COMMIT_SHA}.jar
+  image: maven:latest
+  artifacts:
+   name: backend-social-network
+   expire_in: 1 week
+   paths :
+    - payetesdettes-${CI_COMMIT_SHA}.jar
+
+deploy:
+  stage: deploy
+  needs: [test-unit]
+  tags: [java]
+  only:
+    - main
+  image: maven:latest
+  script:
+    - ls payetesdettes*.jar
